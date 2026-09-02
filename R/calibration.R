@@ -98,12 +98,12 @@ create_calibration_curve <- function(
     }
     selected_weight <- weights * (treatment_labels == level)
 
-    data.frame(reference_group = level, bin = bin) |>
+    data.frame(reference_group = level, .rticausal_bin = bin) |>
       dplyr::mutate(
         weighted_event = selected_weight * reals,
         selected_weight = selected_weight
       ) |>
-      dplyr::group_by(reference_group, bin) |>
+      dplyr::group_by(reference_group, .rticausal_bin) |>
       dplyr::summarise(
         y = sum(weighted_event) / sum(selected_weight),
         .groups = "drop"
@@ -116,26 +116,31 @@ create_calibration_curve <- function(
   }
 
   deciles <- prepared$deciles_dat
-  deciles$.rticausal_bin <- ave(
-    seq_len(nrow(deciles)),
-    deciles$reference_group,
-    FUN = seq_along
-  )
-  adjusted <- dplyr::rename(adjusted, .rticausal_bin = bin)
+  if ("quintile" %in% names(deciles)) {
+    deciles$.rticausal_bin <- deciles$quintile
+  } else {
+    deciles$.rticausal_bin <- ave(
+      seq_len(nrow(deciles)),
+      deciles$reference_group,
+      FUN = seq_along
+    )
+  }
   deciles <- dplyr::left_join(
     dplyr::select(deciles, -y),
     adjusted,
     by = c("reference_group", ".rticausal_bin")
   )
   deciles$text <- paste0(
-    ifelse(prepared$performance_type == "one model", "", paste0("<b>", deciles$reference_group, "</b><br>")),
+    ifelse(
+      prepared$performance_type == "one model",
+      "",
+      paste0("<b>", deciles$reference_group, "</b><br>")
+    ),
     "Predicted: ", round(deciles$x, 3),
     "<br>Observed: ", round(deciles$y, 3)
   )
   prepared$deciles_dat <- dplyr::select(deciles, -.rticausal_bin)
-  prepared$axes_ranges <- list(
-    xaxis = rtichoke:::define_limits_for_calibration_plot(prepared$deciles_dat),
-    yaxis = rtichoke:::define_limits_for_calibration_plot(prepared$deciles_dat)
-  )
+  limits <- rtichoke:::define_limits_for_calibration_plot(prepared$deciles_dat)
+  prepared$axes_ranges <- list(xaxis = limits, yaxis = limits)
   prepared
 }
