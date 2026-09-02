@@ -16,6 +16,11 @@ jobs:
         with:
           use-public-rspm: true
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libuv1-dev libcurl4-openssl-dev
+
       - name: Install bootstrap dependencies and current rtichoke main
         run: |
           Rscript -e 'install.packages(c("remotes", "testthat", "rcmdcheck", "ipeval"), repos = "https://cloud.r-project.org")'
