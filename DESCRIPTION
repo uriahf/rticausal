@@ -15,5 +15,6 @@ Imports:
     htmlwidgets,
     rtichoke
 Suggests:
+    ipeval,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
