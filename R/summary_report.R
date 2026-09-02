@@ -10,6 +10,7 @@ create_summary_report <- function(
   probs,
   reals,
   treats = NULL,
+  intervention = NULL,
   weights = NULL,
   output_file = NULL,
   ...
@@ -18,6 +19,7 @@ create_summary_report <- function(
     probs = probs,
     reals = reals,
     treats = treats,
+    intervention = intervention,
     weights = weights,
     interactive = TRUE,
     ...
