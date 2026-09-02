@@ -8,6 +8,8 @@ name: R-CMD-check
 jobs:
   R-CMD-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -22,6 +24,8 @@ jobs:
           sudo apt-get install -y libuv1-dev libcurl4-openssl-dev
 
       - name: Install bootstrap dependencies and current rtichoke main
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           Rscript -e 'install.packages(c("remotes", "testthat", "rcmdcheck", "ipeval"), repos = "https://cloud.r-project.org")'
           Rscript -e 'remotes::install_github("uriahf/rtichoke@main", dependencies = TRUE, upgrade = "never")'
