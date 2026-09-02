@@ -52,8 +52,8 @@ test_that("calibration coordinates match ipeval cf_calplot", {
     n = 8L
   )
 
-  expect_equal(ours$x, reference$pred)
-  expect_equal(ours$y, reference$obs)
+  expect_equal(ours$x, as.numeric(reference$pred))
+  expect_equal(ours$y, as.numeric(reference$obs))
 })
 
 test_that("group count follows ipeval semantics", {
