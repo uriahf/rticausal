@@ -1,17 +1,26 @@
 #' Create a calibration curve
 #'
 #' Creates ordinary factual calibration when `treats` is `NULL`, delegating
-#' directly to [rtichoke::create_calibration_curve()]. When `treats` is
-#' supplied, `probs` must be a named list containing one predicted probability
-#' vector for each intervention. The observed risk in each rtichoke prediction
-#' bin is replaced by the treatment-specific weighted outcome mean.
+#' directly to [rtichoke::create_calibration_curve()]. For predictions under an
+#' intervention, `treats` contains the observed treatment assignments and
+#' `intervention` identifies the treatment level whose predicted risks are in
+#' `probs`. The observed risk in each rtichoke prediction bin is replaced by
+#' the treatment-specific weighted outcome mean.
 #'
-#' @param probs Named list of predicted probabilities. For intervention
-#'   calibration, names identify intervention levels.
+#' This mirrors the separation used by `ipeval`: prediction/model identity is
+#' distinct from the treatment of interest. `rticausal` consumes caller-supplied
+#' weights but does not estimate a treatment model.
+#'
+#' @param probs Named list of predicted probabilities. Names identify models or
+#'   prediction series, as in rtichoke. In intervention mode every series must
+#'   predict risk under the same `intervention`.
 #' @param reals Binary observed outcomes.
 #' @param treats Optional observed treatment assignments.
-#' @param weights Optional non-negative observation weights. Used only when
-#'   `treats` is supplied. If omitted, assigned observations receive weight 1.
+#' @param intervention Optional treatment level whose counterfactual predictions
+#'   are being evaluated. Required when `treats` is supplied.
+#' @param weights Optional non-negative observation weights. Used only in
+#'   intervention mode. If omitted, observations assigned to `intervention`
+#'   receive weight 1.
 #' @param interactive Passed to rtichoke's calibration renderer.
 #' @param type Calibration type. Intervention calibration currently supports
 #'   only `"discrete"`.
@@ -23,12 +32,16 @@ create_calibration_curve <- function(
   probs,
   reals,
   treats = NULL,
+  intervention = NULL,
   weights = NULL,
   interactive = TRUE,
   type = "discrete",
   ...
 ) {
   if (is.null(treats)) {
+    if (!is.null(intervention) || !is.null(weights)) {
+      stop("intervention and weights require treats.")
+    }
     return(rtichoke::create_calibration_curve(
       probs = probs,
       reals = reals,
@@ -38,6 +51,9 @@ create_calibration_curve <- function(
     ))
   }
 
+  if (is.null(intervention) || length(intervention) != 1L || is.na(intervention)) {
+    stop("intervention must be a single observed treatment level when treats is supplied.")
+  }
   if (!identical(type, "discrete")) {
     stop("Intervention calibration currently supports only type = 'discrete'.")
   }
@@ -46,6 +62,7 @@ create_calibration_curve <- function(
     probs = probs,
     reals = reals,
     treats = treats,
+    intervention = intervention,
     weights = weights,
     ...
   )
@@ -61,12 +78,20 @@ create_calibration_curve <- function(
   probs,
   reals,
   treats,
+  intervention,
   weights = NULL,
   ...
 ) {
-  if (!is.list(probs) || is.null(names(probs)) || any(names(probs) == "")) {
-    stop("For intervention calibration, probs must be a named list.")
+  if (!is.list(probs) || length(probs) == 0L) {
+    stop("probs must be a non-empty list of prediction series.")
   }
+  if (is.null(names(probs))) {
+    names(probs) <- if (length(probs) == 1L) "model" else paste0("model_", seq_along(probs))
+  }
+  if (any(names(probs) == "")) {
+    stop("probs must not contain empty series names.")
+  }
+
   n <- length(reals)
   if (length(treats) != n || any(vapply(probs, length, integer(1)) != n)) {
     stop("probs, reals, and treats must describe the same observations.")
@@ -79,8 +104,9 @@ create_calibration_curve <- function(
   }
 
   treatment_labels <- as.character(treats)
-  if (!all(names(probs) %in% unique(treatment_labels))) {
-    stop("Every name in probs must match an observed treatment level in treats.")
+  intervention_label <- as.character(intervention)
+  if (!intervention_label %in% unique(treatment_labels)) {
+    stop("intervention must match an observed treatment level in treats.")
   }
 
   prepared <- rtichoke::create_calibration_curve_list(
@@ -89,16 +115,16 @@ create_calibration_curve <- function(
     ...
   )
 
-  adjusted <- lapply(names(probs), function(level) {
-    p <- probs[[level]]
+  selected_weight <- weights * (treatment_labels == intervention_label)
+  adjusted <- lapply(names(probs), function(series) {
+    p <- probs[[series]]
     bin <- if (length(unique(p)) == 1L) {
       rep(1L, n)
     } else {
       dplyr::ntile(p, 10L)
     }
-    selected_weight <- weights * (treatment_labels == level)
 
-    data.frame(reference_group = level, .rticausal_bin = bin) |>
+    data.frame(reference_group = series, .rticausal_bin = bin) |>
       dplyr::mutate(
         weighted_event = selected_weight * reals,
         selected_weight = selected_weight
@@ -112,7 +138,7 @@ create_calibration_curve <- function(
     dplyr::bind_rows()
 
   if (any(!is.finite(adjusted$y))) {
-    stop("Each prediction bin must contain positive treatment weight for its intervention.")
+    stop("Each prediction bin must contain positive treatment weight for the intervention.")
   }
 
   deciles <- prepared$deciles_dat
