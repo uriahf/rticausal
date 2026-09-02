@@ -24,11 +24,9 @@ jobs:
           sudo apt-get install -y libuv1-dev libcurl4-openssl-dev
 
       - name: Install bootstrap dependencies and current rtichoke main
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           Rscript -e 'install.packages(c("remotes", "testthat", "rcmdcheck", "ipeval"), repos = "https://cloud.r-project.org")'
-          Rscript -e 'remotes::install_github("uriahf/rtichoke@main", dependencies = TRUE, upgrade = "never")'
+          Rscript -e 'remotes::install_url("https://codeload.github.com/uriahf/rtichoke/tar.gz/refs/heads/main", dependencies = TRUE, upgrade = "never")'
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
