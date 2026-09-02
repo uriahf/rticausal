@@ -26,7 +26,8 @@ jobs:
       - name: Install bootstrap dependencies and current rtichoke main
         run: |
           Rscript -e 'install.packages(c("remotes", "testthat", "rcmdcheck", "ipeval"), repos = "https://cloud.r-project.org")'
-          Rscript -e 'remotes::install_url("https://codeload.github.com/uriahf/rtichoke/tar.gz/refs/heads/main", dependencies = TRUE, upgrade = "never")'
+          git clone --depth 1 --branch main https://github.com/uriahf/rtichoke.git /tmp/rtichoke
+          Rscript -e 'remotes::install_local("/tmp/rtichoke", dependencies = TRUE, upgrade = "never")'
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
