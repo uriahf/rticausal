@@ -16,16 +16,17 @@ jobs:
         with:
           use-public-rspm: true
 
+      - name: Install bootstrap dependencies and current rtichoke main
+        run: |
+          Rscript -e 'install.packages(c("remotes", "testthat", "rcmdcheck", "ipeval"), repos = "https://cloud.r-project.org")'
+          Rscript -e 'remotes::install_github("uriahf/rtichoke@main", dependencies = TRUE, upgrade = "never")'
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
             any::rcmdcheck
             any::ipeval
-            any::remotes
           needs: check
-
-      - name: Install current rtichoke main
-        run: Rscript -e 'remotes::install_github("uriahf/rtichoke@main", dependencies = TRUE, upgrade = "never")'
 
       - name: Run tests, including ipeval parity
         run: Rscript -e 'testthat::test_local(stop_on_failure = TRUE)'
