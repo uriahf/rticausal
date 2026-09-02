@@ -106,10 +106,16 @@ create_calibration_curve <- function(
 
   mean_preds <- tapply(cal$cf_pred, cal$group, mean)
   cal_pseudo <- cal[cal$pseudo_i, , drop = FALSE]
-  mean_obs <- tapply(
-    cal_pseudo,
-    cal_pseudo$group,
-    function(x) stats::weighted.mean(x$obs_outcome, x$ipw)
+  pseudo_groups <- split(cal_pseudo, cal_pseudo$group, drop = FALSE)
+  mean_obs <- vapply(
+    pseudo_groups,
+    function(x) {
+      if (nrow(x) == 0L) {
+        return(NA_real_)
+      }
+      stats::weighted.mean(x$obs_outcome, x$ipw)
+    },
+    numeric(1)
   )
 
   data.frame(
