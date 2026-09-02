@@ -9,6 +9,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
     dplyr,
+    htmlwidgets,
     rtichoke
 Suggests:
     testthat (>= 3.0.0)
