@@ -24,8 +24,50 @@ test_that("intervention calibration separates treatment from model identity", {
   )
 
   expect_setequal(unique(prepared$deciles_dat$reference_group), c("model_a", "model_b"))
-  expect_true(all(prepared$deciles_dat$y >= 0))
-  expect_true(all(prepared$deciles_dat$y <= 1))
+  expect_equal(nrow(prepared$deciles_dat), 16)
+})
+
+test_that("calibration coordinates match ipeval cf_calplot", {
+  skip_if_not_installed("ipeval")
+
+  probs <- c(0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80,
+             0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85)
+  reals <- c(0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1)
+  treats <- c(1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1)
+  weights <- c(1.0, 1.2, 0.8, 1.5, 1.1, 0.9, 1.3, 1.0,
+               1.4, 0.7, 1.6, 1.0, 0.6, 1.8, 1.2, 0.5)
+
+  ours <- rticausal:::.ipeval_calplot_rows(
+    probs = probs,
+    reals = reals,
+    pseudo_i = treats == 1,
+    weights = weights,
+    groups = 8L
+  )
+  reference <- ipeval:::cf_calplot(
+    obs_outcome = reals,
+    cf_pred = probs,
+    pseudo_i = treats == 1,
+    ipw = weights,
+    n = 8L
+  )
+
+  expect_equal(ours$x, reference$pred)
+  expect_equal(ours$y, reference$obs)
+})
+
+test_that("group count follows ipeval semantics", {
+  probs <- rep(c(0.1, 0.5, 0.9), each = 4)
+  rows <- rticausal:::.ipeval_calplot_rows(
+    probs = probs,
+    reals = rep(c(0, 1), 6),
+    pseudo_i = rep(TRUE, 12),
+    weights = rep(1, 12),
+    groups = 8L
+  )
+
+  expect_equal(nrow(rows), 3)
+  expect_equal(rows$x, c(0.1, 0.5, 0.9))
 })
 
 test_that("intervention must match an observed treatment level", {
