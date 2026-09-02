@@ -47,9 +47,10 @@ create_calibration_curve <- function(
     if (!is.null(intervention) || !is.null(weights)) {
       stop("intervention and weights require treats.")
     }
+    factual_reals <- if (is.list(reals)) reals else list(reals)
     return(rtichoke::create_calibration_curve(
       probs = probs,
-      reals = reals,
+      reals = factual_reals,
       interactive = interactive,
       type = type,
       ...
