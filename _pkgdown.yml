@@ -1,0 +1,14 @@
+url: https://uriahf.github.io/rticausal/
+template:
+  bootstrap: 5
+
+reference:
+  - title: "Calibration"
+    desc: "Evaluate calibration of factual and intervention-specific risk predictions."
+    contents:
+      - create_calibration_curve
+
+  - title: "Reports"
+    desc: "Create summary reports for predictions under interventions."
+    contents:
+      - create_summary_report
