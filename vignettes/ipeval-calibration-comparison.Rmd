@@ -26,6 +26,10 @@ in the corresponding pseudo-population. `ipeval` estimates the treatment weights
 from the supplied treatment model; `rticausal` deliberately requires those
 weights to be supplied by the caller.
 
+`rticausal` defaults to 10 calibration bins, matching `rtichoke`. This comparison
+explicitly sets `n_bins = 8` to reproduce the default calibration grouping used
+by `ipeval`.
+
 ## Example data and prediction models
 
 ```{r data-models}
