@@ -1,4 +1,5 @@
 on:
+  pull_request:
   push:
     branches: [main]
 
@@ -30,7 +31,18 @@ jobs:
           Rscript -e 'remotes::install_local("/tmp/rtichoke", dependencies = TRUE, upgrade = "never")'
           Rscript -e 'remotes::install_local(".", dependencies = TRUE, upgrade = "never")'
 
+      - name: Build pkgdown site
+        run: Rscript -e 'pkgdown::build_site(new_process = FALSE)'
+
+      - name: Upload pkgdown preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgdown-preview
+          path: docs
+          if-no-files-found: error
+
       - name: Deploy pkgdown site
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
