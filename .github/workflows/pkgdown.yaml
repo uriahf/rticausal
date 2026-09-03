@@ -22,7 +22,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libuv1-dev libcurl4-openssl-dev
+          sudo apt-get install -y libuv1-dev libcurl4-openssl-dev libfontconfig1-dev
 
       - name: Install rtichoke and website dependencies
         run: |
@@ -30,6 +30,9 @@ jobs:
           git clone --depth 1 --branch main https://github.com/uriahf/rtichoke.git /tmp/rtichoke
           Rscript -e 'remotes::install_local("/tmp/rtichoke", dependencies = TRUE, upgrade = "never")'
           Rscript -e 'remotes::install_local(".", dependencies = TRUE, upgrade = "never")'
+
+      - name: Check pkgdown configuration
+        run: Rscript -e 'pkgdown::check_pkgdown()'
 
       - name: Build pkgdown site
         run: Rscript -e 'pkgdown::build_site(new_process = FALSE)'
