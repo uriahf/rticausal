@@ -1,6 +1,8 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://uriahf.github.io/rticausal/404.html</loc></url>
 <url><loc>https://uriahf.github.io/rticausal/LICENSE-text.html</loc></url>
+<url><loc>https://uriahf.github.io/rticausal/articles/index.html</loc></url>
+<url><loc>https://uriahf.github.io/rticausal/articles/ipeval-calibration-comparison.html</loc></url>
 <url><loc>https://uriahf.github.io/rticausal/authors.html</loc></url>
 <url><loc>https://uriahf.github.io/rticausal/index.html</loc></url>
 <url><loc>https://uriahf.github.io/rticausal/reference/create_calibration_curve.html</loc></url>

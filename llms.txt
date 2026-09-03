@@ -50,3 +50,9 @@ Create summary reports for predictions under interventions.
 - [`create_summary_report()`](https://uriahf.github.io/rticausal/reference/create_summary_report.md)
   : Create a calibration-only summary report
 
+# Articles
+
+### Calibration
+
+- [Calibration under interventions: rticausal and
+  ipeval](https://uriahf.github.io/rticausal/articles/ipeval-calibration-comparison.md):
