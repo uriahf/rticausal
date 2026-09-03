@@ -8,8 +8,8 @@
 #'
 #' Intervention calibration reproduces the subgroup coordinates used by
 #' `ipeval::ip_score(..., metrics = "calplot")`: predictions are sorted and
-#' split into equally sized rank groups using `cut(seq_len(n), breaks = groups)`;
-#' x is the unweighted mean prediction among all subjects in a group, while y is
+#' split into equally sized rank bins using `cut(seq_len(n), breaks = n_bins)`;
+#' x is the unweighted mean prediction among all subjects in a bin, while y is
 #' the weighted mean outcome among subjects observed under `intervention`.
 #'
 #' @param probs Named list of predicted probabilities. Names identify models or
@@ -22,9 +22,9 @@
 #' @param weights Optional non-negative observation weights. Used only in
 #'   intervention mode. If omitted, observations assigned to `intervention`
 #'   receive weight 1.
-#' @param groups Number of calibration groups in intervention mode. `NULL`
-#'   reproduces the `ipeval` default of 8 groups. The actual number is capped at
-#'   the number of unique predictions for each series, as in `ipeval`.
+#' @param n_bins Number of rank-based calibration bins in intervention mode.
+#'   `NULL` reproduces the `ipeval` default of 8 bins. The actual number is
+#'   capped at the number of unique predictions for each series, as in `ipeval`.
 #' @param interactive Passed to rtichoke's calibration renderer.
 #' @param type Calibration type. Intervention calibration currently supports
 #'   only `"discrete"`.
@@ -64,7 +64,7 @@ create_calibration_curve <- function(
   treats = NULL,
   intervention = NULL,
   weights = NULL,
-  groups = NULL,
+  n_bins = NULL,
   interactive = TRUE,
   type = "discrete",
   ...
@@ -96,7 +96,7 @@ create_calibration_curve <- function(
     treats = treats,
     intervention = intervention,
     weights = weights,
-    groups = groups,
+    n_bins = n_bins,
     ...
   )
 
@@ -112,10 +112,10 @@ create_calibration_curve <- function(
   reals,
   pseudo_i,
   weights,
-  groups = 8L,
+  n_bins = 8L,
   reference_group = "model"
 ) {
-  n_breaks <- min(groups, length(unique(probs)))
+  n_breaks <- min(n_bins, length(unique(probs)))
   cal <- data.frame(
     obs_outcome = reals,
     pseudo_i = pseudo_i,
@@ -125,17 +125,17 @@ create_calibration_curve <- function(
   cal <- cal[order(cal$cf_pred), , drop = FALSE]
 
   if (n_breaks >= 2L) {
-    cal$group <- cut(seq_len(nrow(cal)), breaks = n_breaks, labels = FALSE)
+    cal$bin <- cut(seq_len(nrow(cal)), breaks = n_breaks, labels = FALSE)
   } else {
-    cal$group <- 1L
+    cal$bin <- 1L
   }
-  cal$group <- factor(cal$group, levels = seq_len(n_breaks))
+  cal$bin <- factor(cal$bin, levels = seq_len(n_breaks))
 
-  mean_preds <- tapply(cal$cf_pred, cal$group, mean)
+  mean_preds <- tapply(cal$cf_pred, cal$bin, mean)
   cal_pseudo <- cal[cal$pseudo_i, , drop = FALSE]
-  pseudo_groups <- split(cal_pseudo, cal_pseudo$group, drop = FALSE)
+  pseudo_bins <- split(cal_pseudo, cal_pseudo$bin, drop = FALSE)
   mean_obs <- vapply(
-    pseudo_groups,
+    pseudo_bins,
     function(x) {
       if (nrow(x) == 0L) {
         return(NA_real_)
@@ -147,7 +147,7 @@ create_calibration_curve <- function(
 
   data.frame(
     reference_group = reference_group,
-    quintile = seq_len(n_breaks),
+    bin = seq_len(n_breaks),
     x = unname(mean_preds),
     y = unname(mean_obs)
   )
@@ -159,7 +159,7 @@ create_calibration_curve <- function(
   treats,
   intervention,
   weights = NULL,
-  groups = NULL,
+  n_bins = NULL,
   ...
 ) {
   if (!is.list(probs) || length(probs) == 0L) {
@@ -185,13 +185,13 @@ create_calibration_curve <- function(
   if (length(weights) != n || any(!is.finite(weights)) || any(weights < 0)) {
     stop("weights must be finite, non-negative, and the same length as reals.")
   }
-  if (is.null(groups)) {
-    groups <- 8L
+  if (is.null(n_bins)) {
+    n_bins <- 8L
   }
-  if (length(groups) != 1L || !is.finite(groups) || groups < 1 || groups != as.integer(groups)) {
-    stop("groups must be a positive integer.")
+  if (length(n_bins) != 1L || !is.finite(n_bins) || n_bins < 1 || n_bins != as.integer(n_bins)) {
+    stop("n_bins must be a positive integer.")
   }
-  groups <- as.integer(groups)
+  n_bins <- as.integer(n_bins)
 
   treatment_labels <- as.character(treats)
   intervention_label <- as.character(intervention)
@@ -212,18 +212,19 @@ create_calibration_curve <- function(
       reals = reals,
       pseudo_i = pseudo_i,
       weights = weights,
-      groups = groups,
+      n_bins = n_bins,
       reference_group = series
     )
   }) |>
     dplyr::bind_rows()
 
+  label_prefix <- if (prepared$performance_type == "one model") {
+    rep("", nrow(calibration_rows))
+  } else {
+    paste0("<b>", calibration_rows$reference_group, "</b><br>")
+  }
   calibration_rows$text <- paste0(
-    ifelse(
-      prepared$performance_type == "one model",
-      "",
-      paste0("<b>", calibration_rows$reference_group, "</b><br>")
-    ),
+    label_prefix,
     "Predicted: ", round(calibration_rows$x, 3),
     "<br>Observed: ", round(calibration_rows$y, 3)
   )
