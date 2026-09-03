@@ -2,6 +2,12 @@ url: https://uriahf.github.io/rticausal/
 template:
   bootstrap: 5
 
+articles:
+  - title: "Calibration"
+    navbar: ~
+    contents:
+      - ipeval-calibration-comparison
+
 reference:
   - title: "Calibration"
     desc: "Evaluate calibration of factual and intervention-specific risk predictions."
