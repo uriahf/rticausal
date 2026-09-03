@@ -23,8 +23,10 @@
 #'   intervention mode. If omitted, observations assigned to `intervention`
 #'   receive weight 1.
 #' @param n_bins Number of rank-based calibration bins in intervention mode.
-#'   `NULL` reproduces the `ipeval` default of 8 bins. The actual number is
-#'   capped at the number of unique predictions for each series, as in `ipeval`.
+#'   Defaults to 10 to match rtichoke's discrete calibration behavior. A
+#'   different value, such as 8 for ipeval parity, can be requested explicitly.
+#'   The actual number is capped at the number of unique predictions for each
+#'   series.
 #' @param interactive Passed to rtichoke's calibration renderer.
 #' @param type Calibration type. Intervention calibration currently supports
 #'   only `"discrete"`.
@@ -64,7 +66,7 @@ create_calibration_curve <- function(
   treats = NULL,
   intervention = NULL,
   weights = NULL,
-  n_bins = NULL,
+  n_bins = 10L,
   interactive = TRUE,
   type = "discrete",
   ...
@@ -112,7 +114,7 @@ create_calibration_curve <- function(
   reals,
   pseudo_i,
   weights,
-  n_bins = 8L,
+  n_bins = 10L,
   reference_group = "model"
 ) {
   n_breaks <- min(n_bins, length(unique(probs)))
@@ -159,7 +161,7 @@ create_calibration_curve <- function(
   treats,
   intervention,
   weights = NULL,
-  n_bins = NULL,
+  n_bins = 10L,
   ...
 ) {
   if (!is.list(probs) || length(probs) == 0L) {
@@ -184,9 +186,6 @@ create_calibration_curve <- function(
   }
   if (length(weights) != n || any(!is.finite(weights)) || any(weights < 0)) {
     stop("weights must be finite, non-negative, and the same length as reals.")
-  }
-  if (is.null(n_bins)) {
-    n_bins <- 8L
   }
   if (length(n_bins) != 1L || !is.finite(n_bins) || n_bins < 1 || n_bins != as.integer(n_bins)) {
     stop("n_bins must be a positive integer.")
