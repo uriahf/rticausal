@@ -10,7 +10,7 @@ create_calibration_curve(
   treats = NULL,
   intervention = NULL,
   weights = NULL,
-  n_bins = NULL,
+  n_bins = 10L,
   interactive = TRUE,
   type = "discrete",
   ...
@@ -27,7 +27,7 @@ create_calibration_curve(
 
 \item{weights}{Optional non-negative observation weights. Used only in intervention mode. If omitted, observations assigned to \code{intervention} receive weight 1.}
 
-\item{n_bins}{Number of rank-based calibration bins in intervention mode. \code{NULL} reproduces the ipeval default of 8 bins. The actual number is capped at the number of unique predictions for each series, as in ipeval.}
+\item{n_bins}{Number of rank-based calibration bins in intervention mode. Defaults to 10 to match rtichoke's discrete calibration behavior. A different value, such as 8 for ipeval parity, can be requested explicitly. The actual number is capped at the number of unique predictions for each series.}
 
 \item{interactive}{Passed to rtichoke's calibration renderer.}
 
