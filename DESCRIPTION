@@ -1,0 +1,20 @@
+Package: rticausal
+Title: Evaluation of Predictions Under Interventions
+Version: 0.0.1
+Authors@R:
+    person("Uriah", "Finkel", , "ufinkel@gmail.com", role = c("cre", "aut"))
+Description: External validation and evaluation tools for predictions under interventions. The initial release focuses on calibration and reuses rtichoke rendering machinery.
+License: MIT + file LICENSE
+URL: https://uriahf.github.io/rticausal/, https://github.com/uriahf/rticausal
+BugReports: https://github.com/uriahf/rticausal/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    dplyr,
+    htmlwidgets,
+    rtichoke
+Suggests:
+    ipeval,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
