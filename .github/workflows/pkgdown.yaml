@@ -30,9 +30,12 @@ jobs:
             libharfbuzz-dev \
             libfribidi-dev
 
-      - name: Install rtichoke and website dependencies
+      - name: Install website tooling
         run: |
-          Rscript -e 'install.packages(c("remotes", "pkgdown"), repos = "https://cloud.r-project.org")'
+          Rscript -e 'install.packages(c("remotes", "pkgdown"), repos = "https://cloud.r-project.org"); stopifnot(requireNamespace("remotes", quietly = TRUE), requireNamespace("pkgdown", quietly = TRUE))'
+
+      - name: Install rtichoke and rticausal
+        run: |
           git clone --depth 1 --branch main https://github.com/uriahf/rtichoke.git /tmp/rtichoke
           Rscript -e 'remotes::install_local("/tmp/rtichoke", dependencies = TRUE, upgrade = "never")'
           Rscript -e 'remotes::install_local(".", dependencies = TRUE, upgrade = "never")'
