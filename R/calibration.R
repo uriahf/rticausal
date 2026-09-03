@@ -32,6 +32,32 @@
 #'
 #' @return A calibration plot produced by rtichoke.
 #' @export
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 1000
+#'
+#' data <- data.frame(L = rnorm(n), P = rnorm(n))
+#' data$A <- rbinom(n, 1, plogis(data$L))
+#' data$Y <- rbinom(n, 1, plogis(0.1 + 0.5 * data$L + 0.7 * data$P - 2 * data$A))
+#'
+#' # Predict each subject's risk if treatment were set to A = 0.
+#' outcome_model <- glm(Y ~ A + P, data = data, family = "binomial")
+#' intervention_data <- transform(data, A = 0)
+#' probs <- predict(outcome_model, newdata = intervention_data, type = "response")
+#'
+#' # Supply inverse-probability weights; rticausal does not estimate them.
+#' treatment_model <- glm(A ~ L, data = data, family = "binomial")
+#' propensity <- predict(treatment_model, type = "response")
+#' weights <- 1 / (1 - propensity)
+#'
+#' create_calibration_curve(
+#'   probs = list("Model" = probs),
+#'   reals = data$Y,
+#'   treats = data$A,
+#'   intervention = 0,
+#'   weights = weights
+#' )
 create_calibration_curve <- function(
   probs,
   reals,
