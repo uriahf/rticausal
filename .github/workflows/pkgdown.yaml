@@ -1,5 +1,6 @@
 on:
   pull_request:
+    types: [opened, synchronize, reopened, closed]
   push:
     branches: [main]
 
@@ -7,6 +8,7 @@ name: pkgdown
 
 jobs:
   pkgdown:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -48,7 +50,10 @@ jobs:
         run: Rscript -e 'pkgdown::check_pkgdown()'
 
       - name: Build pkgdown site
-        run: Rscript -e 'pkgdown::build_site(new_process = FALSE)'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          Rscript -e 'override <- if (nzchar(Sys.getenv("PR_NUMBER"))) list(url = sprintf("https://uriahf.github.io/rticausal/pull/%s/", Sys.getenv("PR_NUMBER"))) else list(); pkgdown::build_site(new_process = FALSE, override = override)'
 
       - name: Upload pkgdown preview
         uses: actions/upload-artifact@v4
@@ -57,9 +62,62 @@ jobs:
           path: docs
           if-no-files-found: error
 
+      - name: Publish PR preview
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/gh-pages
+          mkdir -p "/tmp/gh-pages/pull/${PR_NUMBER}"
+          rm -rf "/tmp/gh-pages/pull/${PR_NUMBER:?}/"*
+          cp -a docs/. "/tmp/gh-pages/pull/${PR_NUMBER}/"
+          touch /tmp/gh-pages/.nojekyll
+          cd /tmp/gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ".nojekyll" "pull/${PR_NUMBER}"
+          if ! git diff --cached --quiet; then
+            git commit -m "Preview pkgdown for PR #${PR_NUMBER}"
+            git push origin gh-pages
+          fi
+          echo "Preview: https://uriahf.github.io/rticausal/pull/${PR_NUMBER}/"
+
       - name: Deploy pkgdown site
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE)'
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/gh-pages
+          rsync -a --delete --exclude='.git/' --exclude='pull/' docs/ /tmp/gh-pages/
+          touch /tmp/gh-pages/.nojekyll
+          cd /tmp/gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Deploy pkgdown site"
+            git push origin gh-pages
+          fi
+
+  cleanup-preview:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Remove PR preview
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/gh-pages
+          rm -rf "/tmp/gh-pages/pull/${PR_NUMBER}"
+          cd /tmp/gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Remove pkgdown preview for PR #${PR_NUMBER}"
+            git push origin gh-pages
+          fi
