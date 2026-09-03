@@ -24,7 +24,7 @@ test_that("intervention calibration separates treatment from model identity", {
   )
 
   expect_setequal(unique(prepared$deciles_dat$reference_group), c("model_a", "model_b"))
-  expect_equal(nrow(prepared$deciles_dat), 16)
+  expect_equal(nrow(prepared$deciles_dat), 20)
   expect_true(all(grepl("<b>model_a</b>", prepared$deciles_dat$text[prepared$deciles_dat$reference_group == "model_a"], fixed = TRUE)))
   expect_true(all(grepl("<b>model_b</b>", prepared$deciles_dat$text[prepared$deciles_dat$reference_group == "model_b"], fixed = TRUE)))
 })
