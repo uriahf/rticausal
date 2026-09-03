@@ -22,7 +22,13 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libuv1-dev libcurl4-openssl-dev libfontconfig1-dev
+          sudo apt-get install -y \
+            libuv1-dev \
+            libcurl4-openssl-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libharfbuzz-dev \
+            libfribidi-dev
 
       - name: Install rtichoke and website dependencies
         run: |
