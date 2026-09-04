@@ -72,7 +72,39 @@ For `rticausal`, predictions are generated for every validation subject
 after setting treatment to 0. The weights for subjects who were actually
 untreated are the inverse probabilities of receiving no treatment.
 
-- `pred_0`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` ``"naive"`` ``=`` `[`predict`](https://rdrr.io/r/stats/predict.html)`(`` `` ``model_naive``,`` `` newdata ``=`` `[`transform`](https://rdrr.io/r/base/transform.html)`(``df_val``, A ``=`` ``0``)``,`` `` type ``=`` ``"response"`` `` ``)``,`` `` ``"causal"`` ``=`` `[`predict`](https://rdrr.io/r/stats/predict.html)`(`` `` ``model_causal``,`` `` newdata ``=`` `[`transform`](https://rdrr.io/r/base/transform.html)`(``df_val``, A ``=`` ``0``)``,`` `` type ``=`` ``"response"`` `` ``)`` ``)`` ``weights_0`` ``<-`` ``1`` ``/`` ``(``1`` ``-`` ``propensity_val``)`` `` ``score_0`` ``<-`` `[`ip_score`](https://survival-lumc.github.io/ipeval/reference/ip_score.html)`(`` `` object ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` ``"naive"`` ``=`` ``model_naive``,`` `` ``"causal"`` ``=`` ``model_causal`` `` ``)``,`` `` data ``=`` ``df_val``,`` `` outcome ``=`` ``Y``,`` `` treatment_formula ``=`` ``A`` ``~`` ``L``,`` `` treatment_of_interest ``=`` ``0``,`` `` metrics ``=`` ``"calplot"``,`` `` null_model ``=`` ``FALSE``,`` `` quiet ``=`` ``TRUE`` ``)`
+``` r
+
+pred_0 <- list(
+  "naive" = predict(
+    model_naive,
+    newdata = transform(df_val, A = 0),
+    type = "response"
+  ),
+  "causal" = predict(
+    model_causal,
+    newdata = transform(df_val, A = 0),
+    type = "response"
+  )
+)
+weights_0 <- 1 / (1 - propensity_val)
+
+score_0 <- ip_score(
+  object = list(
+    "naive" = model_naive,
+    "causal" = model_causal
+  ),
+  data = df_val,
+  outcome = Y,
+  treatment_formula = A ~ L,
+  treatment_of_interest = 0,
+  metrics = "calplot",
+  null_model = FALSE,
+  quiet = TRUE
+)
+```
+
+### Comparison
+
 - ipeval
 - rticausal
 
@@ -99,7 +131,39 @@ create_calibration_curve(
 
 ## If everybody were treated: A = 1
 
-- `pred_1`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` ``"naive"`` ``=`` `[`predict`](https://rdrr.io/r/stats/predict.html)`(`` `` ``model_naive``,`` `` newdata ``=`` `[`transform`](https://rdrr.io/r/base/transform.html)`(``df_val``, A ``=`` ``1``)``,`` `` type ``=`` ``"response"`` `` ``)``,`` `` ``"causal"`` ``=`` `[`predict`](https://rdrr.io/r/stats/predict.html)`(`` `` ``model_causal``,`` `` newdata ``=`` `[`transform`](https://rdrr.io/r/base/transform.html)`(``df_val``, A ``=`` ``1``)``,`` `` type ``=`` ``"response"`` `` ``)`` ``)`` ``weights_1`` ``<-`` ``1`` ``/`` ``propensity_val`` `` ``score_1`` ``<-`` `[`ip_score`](https://survival-lumc.github.io/ipeval/reference/ip_score.html)`(`` `` object ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` ``"naive"`` ``=`` ``model_naive``,`` `` ``"causal"`` ``=`` ``model_causal`` `` ``)``,`` `` data ``=`` ``df_val``,`` `` outcome ``=`` ``Y``,`` `` treatment_formula ``=`` ``A`` ``~`` ``L``,`` `` treatment_of_interest ``=`` ``1``,`` `` metrics ``=`` ``"calplot"``,`` `` null_model ``=`` ``FALSE``,`` `` quiet ``=`` ``TRUE`` ``)`
+``` r
+
+pred_1 <- list(
+  "naive" = predict(
+    model_naive,
+    newdata = transform(df_val, A = 1),
+    type = "response"
+  ),
+  "causal" = predict(
+    model_causal,
+    newdata = transform(df_val, A = 1),
+    type = "response"
+  )
+)
+weights_1 <- 1 / propensity_val
+
+score_1 <- ip_score(
+  object = list(
+    "naive" = model_naive,
+    "causal" = model_causal
+  ),
+  data = df_val,
+  outcome = Y,
+  treatment_formula = A ~ L,
+  treatment_of_interest = 1,
+  metrics = "calplot",
+  null_model = FALSE,
+  quiet = TRUE
+)
+```
+
+### Comparison
+
 - ipeval
 - rticausal
 
