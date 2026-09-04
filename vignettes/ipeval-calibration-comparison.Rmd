@@ -114,7 +114,7 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 0,
   weights = weights_0,
-  n_bins = 8,
+  groups = 8,
   size = 500
 )
 ```
@@ -173,7 +173,7 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 1,
   weights = weights_1,
-  n_bins = 8,
+  groups = 8,
   size = 500
 )
 ```
@@ -182,4 +182,4 @@ create_calibration_curve(
 
 ## Comparison and interpretation
 
-`rticausal`'s intervention calibration path intentionally reproduces `ipeval`'s calibration grouping algorithm so that setting `n_bins = 8` yields equivalent calibration coordinates. At the same time, `rticausal` maintains the `rtichoke` visual layout (including predicted probability distributions) and requires caller-supplied weights, cleanly decoupling weight estimation from performance evaluation.
+`rticausal`'s intervention calibration path intentionally reproduces `ipeval`'s calibration grouping algorithm so that setting `groups = 8` yields equivalent calibration coordinates. At the same time, `rticausal` maintains the `rtichoke` visual layout (including predicted probability distributions) and requires caller-supplied weights, cleanly decoupling weight estimation from performance evaluation.
