@@ -16,36 +16,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-<style>
-.calibration-comparison {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-  align-items: start;
-}
-.calibration-comparison > div {
-  min-width: 0;
-}
-.calibration-comparison img,
-.calibration-comparison .html-widget {
-  max-width: 100%;
-}
-@media (max-width: 900px) {
-  .calibration-comparison {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
-
 This article reproduces the point-intervention calibration example from the
 [`ipeval` vignette](https://cran.r-project.org/web/packages/ipeval/vignettes/ipeval.html)
 and compares the resulting calibration curves with `rticausal`.
 
-The statistical target is the same: calibration of predicted risk under a
-specified intervention against the inverse-probability-weighted observed outcome
-in the corresponding pseudo-population. `ipeval` estimates the treatment weights
-from the supplied treatment model; `rticausal` deliberately requires those
-weights to be supplied by the caller.
+Both workflows evaluate predictions under a hypothetical intervention. `ipeval` estimates treatment weights internally from a supplied treatment model, whereas `rticausal` intentionally presents this through an API style consistent with the `rtichoke` ecosystem, consuming caller-supplied inverse-probability weights.
 
 ## Example data and prediction models
 
@@ -81,21 +56,44 @@ model_causal <- glm(
   data = df_dev,
   weights = iptw_dev
 )
-
-# ipeval estimates validation-set treatment weights from A ~ L internally.
-# rticausal consumes caller-supplied weights, so fit the same treatment model
-# explicitly for the comparison below.
-trt_model_val <- glm(A ~ L, family = "binomial", data = df_val)
-propensity_val <- predict(trt_model_val, type = "response")
 ```
 
-## If nobody were treated: A = 0
+## Calibration if nobody were treated: A = 0
 
-For `rticausal`, predictions are generated for every validation subject after
-setting treatment to 0. The weights for subjects who were actually untreated are
-the inverse probabilities of receiving no treatment.
+In this section, we evaluate the counterfactual calibration if everyone received treatment $A = 0$.
 
-```{r intervention-0-inputs}
+::: {.panel-tabset group="package"}
+
+## ipeval
+
+In `ipeval`, intervention-specific calibration is computed via `ip_score()`, which fits the treatment model internally to estimate weights.
+
+```{r ipeval-0, fig.width=5, fig.height=5}
+score_0 <- ip_score(
+  object = list(
+    "naive" = model_naive,
+    "causal" = model_causal
+  ),
+  data = df_val,
+  outcome = Y,
+  treatment_formula = A ~ L,
+  treatment_of_interest = 0,
+  metrics = "calplot",
+  null_model = FALSE,
+  quiet = TRUE
+)
+
+plot(score_0, main = "Calibration if everyone had A = 0")
+```
+
+## rticausal
+
+In `rticausal`, predictions under intervention and inverse-probability weights are supplied explicitly by the caller, maintaining alignment with the `rtichoke` ecosystem API style.
+
+```{r rticausal-0}
+trt_model_val <- glm(A ~ L, family = "binomial", data = df_val)
+propensity_val <- predict(trt_model_val, type = "response")
+
 pred_0 <- list(
   "naive" = predict(
     model_naive,
@@ -110,7 +108,29 @@ pred_0 <- list(
 )
 weights_0 <- 1 / (1 - propensity_val)
 
-score_0 <- ip_score(
+create_calibration_curve(
+  probs = pred_0,
+  reals = df_val$Y,
+  treats = df_val$A,
+  intervention = 0,
+  weights = weights_0,
+  n_bins = 8,
+  size = 500
+)
+```
+
+:::
+
+## Calibration if everybody were treated: A = 1
+
+Here, we evaluate counterfactual calibration if everyone received treatment $A = 1$.
+
+::: {.panel-tabset group="package"}
+
+## ipeval
+
+```{r ipeval-1, fig.width=5, fig.height=5}
+score_1 <- ip_score(
   object = list(
     "naive" = model_naive,
     "causal" = model_causal
@@ -118,43 +138,21 @@ score_0 <- ip_score(
   data = df_val,
   outcome = Y,
   treatment_formula = A ~ L,
-  treatment_of_interest = 0,
+  treatment_of_interest = 1,
   metrics = "calplot",
   null_model = FALSE,
   quiet = TRUE
 )
+
+plot(score_1, main = "Calibration if everyone had A = 1")
 ```
 
-<div class="calibration-comparison">
-<div>
-<h3>ipeval</h3>
+## rticausal
 
-```{r ipeval-0, fig.width=5, fig.height=5}
-plot(score_0, main = "Calibration if everyone had A = 0")
-```
+```{r rticausal-1}
+trt_model_val <- glm(A ~ L, family = "binomial", data = df_val)
+propensity_val <- predict(trt_model_val, type = "response")
 
-</div>
-<div>
-<h3>rticausal</h3>
-
-```{r rticausal-0}
-create_calibration_curve(
-  probs = pred_0,
-  reals = df_val$Y,
-  treats = df_val$A,
-  intervention = 0,
-  weights = weights_0,
-  groups = 8,
-  size = 500
-)
-```
-
-</div>
-</div>
-
-## If everybody were treated: A = 1
-
-```{r intervention-1-inputs}
 pred_1 <- list(
   "naive" = predict(
     model_naive,
@@ -169,49 +167,19 @@ pred_1 <- list(
 )
 weights_1 <- 1 / propensity_val
 
-score_1 <- ip_score(
-  object = list(
-    "naive" = model_naive,
-    "causal" = model_causal
-  ),
-  data = df_val,
-  outcome = Y,
-  treatment_formula = A ~ L,
-  treatment_of_interest = 1,
-  metrics = "calplot",
-  null_model = FALSE,
-  quiet = TRUE
-)
-```
-
-<div class="calibration-comparison">
-<div>
-<h3>ipeval</h3>
-
-```{r ipeval-1, fig.width=5, fig.height=5}
-plot(score_1, main = "Calibration if everyone had A = 1")
-```
-
-</div>
-<div>
-<h3>rticausal</h3>
-
-```{r rticausal-1}
 create_calibration_curve(
   probs = pred_1,
   reals = df_val$Y,
   treats = df_val$A,
   intervention = 1,
   weights = weights_1,
-  groups = 8,
+  n_bins = 8,
   size = 500
 )
 ```
 
-</div>
-</div>
+:::
 
-The two packages use the same eight rank-based calibration groups for this
-comparison. `rticausal` keeps the established rtichoke presentation, including
-the prediction histogram, while the intervention-specific calibration
-coordinates follow the `ipeval` calculation.
+## Comparison and interpretation
+
+`rticausal`'s intervention calibration path intentionally reproduces `ipeval`'s calibration grouping algorithm so that setting `n_bins = 8` yields equivalent calibration coordinates. At the same time, `rticausal` maintains the `rtichoke` visual layout (including predicted probability distributions) and requires caller-supplied weights, cleanly decoupling weight estimation from performance evaluation.
