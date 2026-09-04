@@ -78,7 +78,7 @@ ipeval_colors <- grDevices::adjustcolor(
 )
 ```
 
-## If nobody were treated: A = 0 {.tabset}
+## If nobody were treated: A = 0
 
 For `rticausal`, predictions are generated for every validation subject after
 setting treatment to 0. The weights for subjects who were actually untreated are
@@ -114,13 +114,15 @@ score_0 <- ip_score(
 )
 ```
 
-### ipeval
+### Comparison {.tabset}
+
+#### ipeval
 
 ```{r ipeval-0, fig.width=5, fig.height=5}
 plot(score_0, main = "Calibration if everyone had A = 0")
 ```
 
-### rticausal
+#### rticausal
 
 ```{r rticausal-0}
 create_calibration_curve(
@@ -135,7 +137,7 @@ create_calibration_curve(
 )
 ```
 
-## If everybody were treated: A = 1 {.tabset}
+## If everybody were treated: A = 1
 
 ```{r intervention-1-inputs}
 pred_1 <- list(
@@ -167,13 +169,15 @@ score_1 <- ip_score(
 )
 ```
 
-### ipeval
+### Comparison {.tabset}
+
+#### ipeval
 
 ```{r ipeval-1, fig.width=5, fig.height=5}
 plot(score_1, main = "Calibration if everyone had A = 1")
 ```
 
-### rticausal
+#### rticausal
 
 ```{r rticausal-1}
 create_calibration_curve(
