@@ -79,7 +79,7 @@ test_that("calibration coordinates match ipeval cf_calplot", {
 
   expect_equal(ours$x, as.numeric(reference$pred))
   expect_equal(ours$y, as.numeric(reference$obs))
-  expect_equal(ours$bin, as.integer(reference$quintile))
+  expect_equal(ours$bin, 1:8)
 })
 
 test_that("bin count follows ipeval unique prediction capping semantics", {

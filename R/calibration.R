@@ -84,14 +84,25 @@ create_calibration_curve <- function(
         ...
       ))
     } else {
-      return(rtichoke::create_calibration_curve(
-        probs = probs,
-        reals = factual_reals,
-        n_bins = n_bins,
-        interactive = interactive,
-        type = type,
-        ...
-      ))
+      rtichoke_args <- names(formals(rtichoke::create_calibration_curve))
+      if ("n_bins" %in% rtichoke_args || "..." %in% rtichoke_args) {
+        return(rtichoke::create_calibration_curve(
+          probs = probs,
+          reals = factual_reals,
+          n_bins = n_bins,
+          interactive = interactive,
+          type = type,
+          ...
+        ))
+      } else {
+        return(rtichoke::create_calibration_curve(
+          probs = probs,
+          reals = factual_reals,
+          interactive = interactive,
+          type = type,
+          ...
+        ))
+      }
     }
   }
 
