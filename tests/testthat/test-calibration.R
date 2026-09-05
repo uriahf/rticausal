@@ -24,7 +24,9 @@ test_that("intervention calibration separates treatment from model identity", {
   )
 
   expect_setequal(unique(prepared$deciles_dat$reference_group), c("model_a", "model_b"))
-  expect_equal(nrow(prepared$deciles_dat), 16)
+  expect_equal(nrow(prepared$deciles_dat), 20)
+  expect_true(all(grepl("<b>model_a</b>", prepared$deciles_dat$text[prepared$deciles_dat$reference_group == "model_a"], fixed = TRUE)))
+  expect_true(all(grepl("<b>model_b</b>", prepared$deciles_dat$text[prepared$deciles_dat$reference_group == "model_b"], fixed = TRUE)))
 })
 
 test_that("calibration coordinates match ipeval cf_calplot", {
@@ -42,7 +44,7 @@ test_that("calibration coordinates match ipeval cf_calplot", {
     reals = reals,
     pseudo_i = treats == 1,
     weights = weights,
-    groups = 8L
+    n_bins = 8L
   )
   reference <- ipeval:::cf_calplot(
     obs_outcome = reals,
@@ -56,18 +58,19 @@ test_that("calibration coordinates match ipeval cf_calplot", {
   expect_equal(ours$y, as.numeric(reference$obs))
 })
 
-test_that("group count follows ipeval semantics", {
+test_that("bin count follows ipeval semantics", {
   probs <- rep(c(0.1, 0.5, 0.9), each = 4)
   rows <- rticausal:::.ipeval_calplot_rows(
     probs = probs,
     reals = rep(c(0, 1), 6),
     pseudo_i = rep(TRUE, 12),
     weights = rep(1, 12),
-    groups = 8L
+    n_bins = 8L
   )
 
   expect_equal(nrow(rows), 3)
   expect_equal(rows$x, c(0.1, 0.5, 0.9))
+  expect_equal(rows$bin, 1:3)
 })
 
 test_that("intervention must match an observed treatment level", {

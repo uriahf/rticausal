@@ -16,27 +16,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-<style>
-.calibration-comparison {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-  align-items: start;
-}
-.calibration-comparison > div {
-  min-width: 0;
-}
-.calibration-comparison img,
-.calibration-comparison .html-widget {
-  max-width: 100%;
-}
-@media (max-width: 900px) {
-  .calibration-comparison {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
-
 This article reproduces the point-intervention calibration example from the
 [`ipeval` vignette](https://cran.r-project.org/web/packages/ipeval/vignettes/ipeval.html)
 and compares the resulting calibration curves with `rticausal`.
@@ -46,6 +25,10 @@ specified intervention against the inverse-probability-weighted observed outcome
 in the corresponding pseudo-population. `ipeval` estimates the treatment weights
 from the supplied treatment model; `rticausal` deliberately requires those
 weights to be supplied by the caller.
+
+`rticausal` defaults to 10 calibration bins, matching `rtichoke`. This comparison
+explicitly sets `n_bins = 8` to reproduce the default calibration grouping used
+by `ipeval`.
 
 ## Example data and prediction models
 
@@ -87,6 +70,12 @@ model_causal <- glm(
 # explicitly for the comparison below.
 trt_model_val <- glm(A ~ L, family = "binomial", data = df_val)
 propensity_val <- predict(trt_model_val, type = "response")
+
+# Match the colors used by ipeval::plot.ip_score().
+ipeval_colors <- grDevices::adjustcolor(
+  rep(grDevices::palette()[-1], length.out = 2),
+  alpha.f = 0.8
+)
 ```
 
 ## If nobody were treated: A = 0
@@ -125,17 +114,15 @@ score_0 <- ip_score(
 )
 ```
 
-<div class="calibration-comparison">
-<div>
-<h3>ipeval</h3>
+### Comparison {.tabset}
+
+#### ipeval
 
 ```{r ipeval-0, fig.width=5, fig.height=5}
 plot(score_0, main = "Calibration if everyone had A = 0")
 ```
 
-</div>
-<div>
-<h3>rticausal</h3>
+#### rticausal
 
 ```{r rticausal-0}
 create_calibration_curve(
@@ -144,13 +131,11 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 0,
   weights = weights_0,
-  groups = 8,
-  size = 500
+  n_bins = 8,
+  size = 500,
+  color_values = ipeval_colors
 )
 ```
-
-</div>
-</div>
 
 ## If everybody were treated: A = 1
 
@@ -184,17 +169,15 @@ score_1 <- ip_score(
 )
 ```
 
-<div class="calibration-comparison">
-<div>
-<h3>ipeval</h3>
+### Comparison {.tabset}
+
+#### ipeval
 
 ```{r ipeval-1, fig.width=5, fig.height=5}
 plot(score_1, main = "Calibration if everyone had A = 1")
 ```
 
-</div>
-<div>
-<h3>rticausal</h3>
+#### rticausal
 
 ```{r rticausal-1}
 create_calibration_curve(
@@ -203,15 +186,13 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 1,
   weights = weights_1,
-  groups = 8,
-  size = 500
+  n_bins = 8,
+  size = 500,
+  color_values = ipeval_colors
 )
 ```
 
-</div>
-</div>
-
-The two packages use the same eight rank-based calibration groups for this
+The two packages use the same eight rank-based calibration bins for this
 comparison. `rticausal` keeps the established rtichoke presentation, including
 the prediction histogram, while the intervention-specific calibration
 coordinates follow the `ipeval` calculation.
