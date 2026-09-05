@@ -144,7 +144,7 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 0,
   weights = weights_0,
-  groups = 8,
+  n_bins = 8,
   size = 500
 )
 ```
@@ -203,7 +203,7 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 1,
   weights = weights_1,
-  groups = 8,
+  n_bins = 8,
   size = 500
 )
 ```
@@ -211,7 +211,7 @@ create_calibration_curve(
 </div>
 </div>
 
-The two packages use the same eight rank-based calibration groups for this
+The two packages use the same eight rank-based calibration bins for this
 comparison. `rticausal` keeps the established rtichoke presentation, including
 the prediction histogram, while the intervention-specific calibration
 coordinates follow the `ipeval` calculation.
