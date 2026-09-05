@@ -12,6 +12,10 @@ estimates the treatment weights from the supplied treatment model;
 `rticausal` deliberately requires those weights to be supplied by the
 caller.
 
+`rticausal` defaults to 10 calibration bins, matching `rtichoke`. This
+comparison explicitly sets `n_bins = 8` to reproduce the default
+calibration grouping used by `ipeval`.
+
 ## Example data and prediction models
 
 ``` r
@@ -54,6 +58,12 @@ model_causal <- glm(
 # explicitly for the comparison below.
 trt_model_val <- glm(A ~ L, family = "binomial", data = df_val)
 propensity_val <- predict(trt_model_val, type = "response")
+
+# Match the colors used by ipeval::plot.ip_score().
+ipeval_colors <- grDevices::adjustcolor(
+  rep(grDevices::palette()[-1], length.out = 2),
+  alpha.f = 0.8
+)
 ```
 
 ## If nobody were treated: A = 0
@@ -93,7 +103,10 @@ score_0 <- ip_score(
 )
 ```
 
-### ipeval
+### Comparison
+
+- ipeval
+- rticausal
 
 ``` r
 
@@ -101,8 +114,6 @@ plot(score_0, main = "Calibration if everyone had A = 0")
 ```
 
 ![](ipeval-calibration-comparison_files/figure-html/ipeval-0-1.png)
-
-### rticausal
 
 ``` r
 
@@ -112,8 +123,9 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 0,
   weights = weights_0,
-  groups = 8,
-  size = 500
+  n_bins = 8,
+  size = 500,
+  color_values = ipeval_colors
 )
 ```
 
@@ -150,7 +162,10 @@ score_1 <- ip_score(
 )
 ```
 
-### ipeval
+### Comparison
+
+- ipeval
+- rticausal
 
 ``` r
 
@@ -158,8 +173,6 @@ plot(score_1, main = "Calibration if everyone had A = 1")
 ```
 
 ![](ipeval-calibration-comparison_files/figure-html/ipeval-1-1.png)
-
-### rticausal
 
 ``` r
 
@@ -169,13 +182,13 @@ create_calibration_curve(
   treats = df_val$A,
   intervention = 1,
   weights = weights_1,
-  groups = 8,
-  size = 500
+  n_bins = 8,
+  size = 500,
+  color_values = ipeval_colors
 )
 ```
 
-The two packages use the same eight rank-based calibration groups for
-this comparison. `rticausal` keeps the established rtichoke
-presentation, including the prediction histogram, while the
-intervention-specific calibration coordinates follow the `ipeval`
-calculation.
+The two packages use the same eight rank-based calibration bins for this
+comparison. `rticausal` keeps the established rtichoke presentation,
+including the prediction histogram, while the intervention-specific
+calibration coordinates follow the `ipeval` calculation.
