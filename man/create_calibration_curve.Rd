@@ -10,7 +10,7 @@ create_calibration_curve(
   treats = NULL,
   intervention = NULL,
   weights = NULL,
-  groups = NULL,
+  n_bins = NULL,
   interactive = TRUE,
   type = "discrete",
   ...
@@ -27,7 +27,7 @@ create_calibration_curve(
 
 \item{weights}{Optional non-negative observation weights. Used only in intervention mode. If omitted, observations assigned to \code{intervention} receive weight 1.}
 
-\item{groups}{Number of calibration groups in intervention mode. \code{NULL} reproduces the ipeval default of 8 groups. The actual number is capped at the number of unique predictions for each series, as in ipeval.}
+\item{n_bins}{Number of calibration bins. In intervention mode, \code{NULL} reproduces the \code{ipeval} default of 8 bins. In factual mode, \code{NULL} delegates to rtichoke's default. The actual number of bins is capped at the number of unique predictions for each series, as in \code{ipeval}.}
 
 \item{interactive}{Passed to rtichoke's calibration renderer.}
 
@@ -42,7 +42,7 @@ A calibration plot produced by rtichoke.
 Creates ordinary factual calibration when \code{treats} is \code{NULL}, delegating directly to \code{rtichoke::create_calibration_curve()}. For predictions under an intervention, \code{treats} contains the observed treatment assignments and \code{intervention} identifies the treatment level whose predicted risks are in \code{probs}.
 }
 \details{
-Intervention calibration reproduces the subgroup coordinates used by \code{ipeval::ip_score(..., metrics = "calplot")}: predictions are sorted and split into equally sized rank groups using \code{cut(seq_len(n), breaks = groups)}; x is the unweighted mean prediction among all subjects in a group, while y is the weighted mean outcome among subjects observed under \code{intervention}.
+Intervention calibration reproduces the subgroup coordinates used by \code{ipeval::ip_score(..., metrics = "calplot")}: predictions are sorted and split into equally sized rank groups using \code{cut(seq_len(n), breaks = n_bins)}; x is the unweighted mean prediction among all subjects in a bin, while y is the weighted mean outcome among subjects observed under \code{intervention}.
 }
 \examples{
 set.seed(1)
